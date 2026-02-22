@@ -1,0 +1,65 @@
+{
+    "typeName": "AWX::RDS::AccessProvider",
+    "description": "This CloudFormation template creates an access provider for RDS databases. The access provider is implemented as an AWS SSO permission set that provides the necessary permissions for a database user to access RDS databases.",
+    "createOnlyProperties": [
+        "/properties/UserName"
+    ],
+    "readOnlyProperties": [
+        "/properties/PermissionSetArn"
+    ],
+    "primaryIdentifier": [
+        "/properties/PermissionSetArn"
+    ],
+    "replacementStrategy": "delete_then_create",
+    "additionalProperties": false,
+    "properties": {
+        "UserName": {
+            "type": "string",
+            "description": "The name of the database user to which the access provider will provide access.",
+            "pattern": "^[a-z0-9.]{1,16}$",
+            "minLength": 1,
+            "maxLength": 16
+        },
+        "PermissionSetArn": {
+            "type": "string",
+            "description": "The ARN of the permission set created for the database user.",
+            "pattern": "^arn:aws:sso:::permissionSet/ssoins-[a-z0-9]+/ps-[a-z0-9]+$"
+        }
+    },
+    "required": [
+        "UserName"
+    ],
+    "handlers": {
+        "create": {
+            "permissions": [
+                "iam:CreatePolicy",
+                "iam:CreatePolicyVersion",
+                "sso:PutInlinePolicyToPermissionSet",
+                "sso:CreatePermissionSet"
+            ],
+            "timeoutInMinutes": 5
+        },
+        "read": {
+            "permissions": [
+                "iam:GetPolicy",
+                "iam:ListPolicies",
+                "iam:ListPolicyVersions",
+                "sso:GetInlinePolicyForPermissionSet",
+                "sso:DescribePermissionSet",
+                "sso:ListPermissionSets",
+                "sts:GetCallerIdentity"
+            ],
+            "timeoutInMinutes": 5
+        },
+        "delete": {
+            "permissions": [
+                "iam:DeletePolicy",
+                "iam:DeletePolicyVersion",
+                "sso:DeleteInlinePolicyFromPermissionSet",
+                "sso:DeletePermissionSet",
+                "sts:GetCallerIdentity"
+            ],
+            "timeoutInMinutes": 5
+        }
+    }
+}
