@@ -21,7 +21,9 @@ TYPE_NAME = "AWX::RDS::AccessProvider"
 resource = Resource(TYPE_NAME, ResourceModel)
 test_entrypoint = resource.test_entrypoint
 
+# Temporary hardcoded values.
 SSO_INSTANCE_ARN = 'arn:aws:sso:::instance/ssoins-7223b18c2c5ea126'
+IDENTITY_STORE_ID = 'd-9067ae954e'
 
 @resource.handler(Action.CREATE)
 def create_handler(
@@ -31,15 +33,16 @@ def create_handler(
 ) -> ProgressEvent:
     model = request.desiredResourceState
     ssoClient = session.client("sso-admin", region_name="us-east-1")
+    identityStoreClient = session.client("identitystore", region_name="us-east-1")
 
     try:
-        response = ssoClient.create_permission_set(
-            Name=f"DB_Access_For_{model.UserName}",
+        ssoResponse = ssoClient.create_permission_set(
+            Name=f"DB_Access_For_{model.Username}",
             InstanceArn=SSO_INSTANCE_ARN
         )
         ssoClient.put_inline_policy_to_permission_set(
             InstanceArn=SSO_INSTANCE_ARN,
-            PermissionSetArn=response['PermissionSet']['PermissionSetArn'],
+            PermissionSetArn=ssoResponse['PermissionSet']['PermissionSetArn'],
             InlinePolicy=json.dumps({
                 "Version": "2012-10-17",
                 "Statement": [
@@ -49,19 +52,36 @@ def create_handler(
                             "rds-db:connect"
                         ],
                         "Resource": [
-                            f"arn:aws:rds-db:ap-southeast-1:891376986941:dbuser:*/{model.UserName}"
+                            f"arn:aws:rds-db:ap-southeast-1:891376986941:dbuser:*/{model.Username}"
                         ]
                     }
                 ]
             })
         )
+        identityStoreResponse = identityStoreClient.get_user_id(
+            IdentityStoreId=IDENTITY_STORE_ID,
+            AlternateIdentifier={
+                'UniqueAttribute': {
+                    'AttributePath': 'userName',
+                    'AttributeValue': model.Username
+                }
+            }
+        )
+        ssoClient.create_account_assignment(
+            InstanceArn=SSO_INSTANCE_ARN,
+            PermissionSetArn=ssoResponse['PermissionSet']['PermissionSetArn'],
+            PrincipalType='USER',
+            PrincipalId=identityStoreResponse['UserId'],
+            TargetType='AWS_ACCOUNT',
+            TargetId='891376986941'
+        )
     except ClientError as error:
         raise exceptions.InternalFailure(f"Failed to create permission set with error {error}")
     
-    model.PermissionSetArn = response['PermissionSet']['PermissionSetArn']
+    model.PermissionSetArn = ssoResponse['PermissionSet']['PermissionSetArn']
 
     return ProgressEvent(
-        message="Successfully created permission set for RDS access",
+        message="Successfully set up RDS access.",
         status=OperationStatus.SUCCESS,
         resourceModel=model,
     )

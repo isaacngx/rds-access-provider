@@ -2,7 +2,7 @@
     "typeName": "AWX::RDS::AccessProvider",
     "description": "This CloudFormation template creates an access provider for RDS databases. The access provider is implemented as an AWS SSO permission set that provides the necessary permissions for a database user to access RDS databases.",
     "createOnlyProperties": [
-        "/properties/UserName"
+        "/properties/Username"
     ],
     "readOnlyProperties": [
         "/properties/PermissionSetArn"
@@ -13,12 +13,12 @@
     "replacementStrategy": "delete_then_create",
     "additionalProperties": false,
     "properties": {
-        "UserName": {
+        "Username": {
             "type": "string",
             "description": "The name of the database user to which the access provider will provide access.",
-            "pattern": "^[a-z0-9.]{1,16}$",
+            "pattern": "^[a-z0-9.]{1,32}$",
             "minLength": 1,
-            "maxLength": 16
+            "maxLength": 32
         },
         "PermissionSetArn": {
             "type": "string",
@@ -27,7 +27,7 @@
         }
     },
     "required": [
-        "UserName"
+        "Username"
     ],
     "handlers": {
         "create": {
