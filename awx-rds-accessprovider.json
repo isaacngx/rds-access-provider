@@ -8,7 +8,7 @@
         "/properties/PermissionSetArn"
     ],
     "primaryIdentifier": [
-        "/properties/PermissionSetArn"
+        "/properties/UserName"
     ],
     "replacementStrategy": "delete_then_create",
     "additionalProperties": false,
