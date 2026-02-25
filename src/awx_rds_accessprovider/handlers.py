@@ -27,6 +27,7 @@ test_entrypoint = resource.test_entrypoint
 # Temporary hardcoded values.
 SSO_INSTANCE_ARN = 'arn:aws:sso:::instance/ssoins-7223b18c2c5ea126'
 IDENTITY_STORE_ID = 'd-9067ae954e'
+TARGET_ACCOUNT_ID = '891376986941'
 
 @resource.handler(Action.CREATE)
 def create_handler(
@@ -41,7 +42,7 @@ def create_handler(
 
     try:
         response = ssoClient.create_permission_set(
-            Name=f"DB_Access_For_{model.UserName}",
+            Name=f"DB_Access_For_{model.Username}",
             InstanceArn=SSO_INSTANCE_ARN,
         )
         ssoClient.put_inline_policy_to_permission_set(
@@ -57,7 +58,7 @@ def create_handler(
                             "Resource": [
                                 (
                                     f"arn:aws:rds-db:ap-southeast-1:"
-                                    f"891376986941:dbuser:*/{model.UserName}"
+                                    f"{TARGET_ACCOUNT_ID}:dbuser:*/{model.Username}"
                                 )
                             ],
                         }
@@ -69,7 +70,7 @@ def create_handler(
             IdentityStoreId=IDENTITY_STORE_ID,
             AlternateIdentifier={
                 'UniqueAttribute': {
-                    'AttributePath': 'userName',
+                    'AttributePath': 'Username',
                     'AttributeValue': model.Username
                 }
             }
@@ -80,14 +81,15 @@ def create_handler(
             PrincipalType='USER',
             PrincipalId=identityStoreResponse['UserId'],
             TargetType='AWS_ACCOUNT',
-            TargetId='891376986941'
+            TargetId=TARGET_ACCOUNT_ID
         )
         ssmClient.put_parameter(
-            Name=f"/awx/rds/accessprovider/{model.UserName}",
+            Name=f"/awx/rds/accessprovider/{model.Username}",
             Value=json.dumps(
                 {
                     "PermissionSetArn":
-                        response["PermissionSet"]["PermissionSetArn"]
+                        response["PermissionSet"]["PermissionSetArn"],
+                    "UserId": identityStoreResponse['UserId']
                 }
             ),
             Type="String",
@@ -95,11 +97,8 @@ def create_handler(
         )
     except ClientError as error:
         raise exceptions.InternalFailure(
-            f"Failed to create permission set with error {error}"
+            f"Failed with error {error}"
         )
-
-    model.PermissionSetArn = response["PermissionSet"]["PermissionSetArn"]
-
     return ProgressEvent(
         message="Successfully set up RDS access.",
         status=OperationStatus.SUCCESS,
@@ -107,10 +106,6 @@ def create_handler(
     )
 
 
-# TRADE-OFF
-# We either loop through all permission sets to find the one with the correct
-# name and delete it.
-# Or the ARN of the permission set needs to be part of the model's indentifier.
 @resource.handler(Action.DELETE)
 def delete_handler(
     session: Optional[SessionProxy],
@@ -123,17 +118,25 @@ def delete_handler(
 
     try:
         response = ssmClient.get_parameter(
-            Name=f"/awx/rds/accessprovider/{model.UserName}",
+            Name=f"/awx/rds/accessprovider/{model.Username}",
         )
-        permission_set_arn = json.loads(
+        properties = json.loads(
             response["Parameter"]["Value"]
-        )["PermissionSetArn"]
+        )
+        ssoClient.delete_account_assignment(
+            InstanceArn=SSO_INSTANCE_ARN,
+            PermissionSetArn=properties["PermissionSetArn"],
+            PrincipalType='USER',
+            PrincipalId=properties["UserId"],
+            TargetType='AWS_ACCOUNT',
+            TargetId=TARGET_ACCOUNT_ID
+        )
         ssoClient.delete_permission_set(
             InstanceArn=SSO_INSTANCE_ARN,
-            PermissionSetArn=permission_set_arn,
+            PermissionSetArn=properties["PermissionSetArn"],
         )
         ssmClient.delete_parameter(
-            Name=f"/awx/rds/accessprovider/{model.UserName}"
+            Name=f"/awx/rds/accessprovider/{model.Username}"
         )
     except ClientError as error:
         raise exceptions.InternalFailure(
@@ -154,7 +157,7 @@ def read_handler(
     model = request.desiredResourceState
     ssoClient = session.client("sso-admin", region_name="us-east-1")
     try:
-        response = ssoClient.describe_permission_set(
+        ssoClient.describe_permission_set(
             InstanceArn=SSO_INSTANCE_ARN,
             PermissionSetArn=model.PermissionSetArn,
         )
@@ -162,8 +165,6 @@ def read_handler(
         raise exceptions.InternalFailure(
             f"Failed to read permission set with error {error}"
         )
-
-    model.PermissionSetArn = response["PermissionSet"]["PermissionSetArn"]
 
     return ProgressEvent(
         message="Successfully read permission set for RDS access",

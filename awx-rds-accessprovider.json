@@ -4,11 +4,8 @@
     "createOnlyProperties": [
         "/properties/Username"
     ],
-    "readOnlyProperties": [
-        "/properties/PermissionSetArn"
-    ],
     "primaryIdentifier": [
-        "/properties/UserName"
+        "/properties/Username"
     ],
     "replacementStrategy": "delete_then_create",
     "additionalProperties": false,
@@ -35,7 +32,10 @@
                 "iam:CreatePolicy",
                 "iam:CreatePolicyVersion",
                 "sso:PutInlinePolicyToPermissionSet",
-                "sso:CreatePermissionSet"
+                "sso:CreatePermissionSet",
+                "identitystore:GetUserId",
+                "sso:CreateAccountAssignment",
+                "ssm:PutParameter"
             ],
             "timeoutInMinutes": 5
         },
@@ -46,8 +46,7 @@
                 "iam:ListPolicyVersions",
                 "sso:GetInlinePolicyForPermissionSet",
                 "sso:DescribePermissionSet",
-                "sso:ListPermissionSets",
-                "sts:GetCallerIdentity"
+                "sso:ListPermissionSets"
             ],
             "timeoutInMinutes": 5
         },
@@ -56,8 +55,10 @@
                 "iam:DeletePolicy",
                 "iam:DeletePolicyVersion",
                 "sso:DeleteInlinePolicyFromPermissionSet",
+                "ssm:GetParameter",
+                "sso:DeleteAccountAssignment",
                 "sso:DeletePermissionSet",
-                "sts:GetCallerIdentity"
+                "ssm:DeleteParameter"
             ],
             "timeoutInMinutes": 5
         }
