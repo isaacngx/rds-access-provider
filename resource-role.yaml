@@ -46,6 +46,8 @@ Resources:
                 - "sso:DeleteAccountAssignment"
                 - "sso:DeleteInlinePolicyFromPermissionSet"
                 - "sso:DeletePermissionSet"
+                - "sso:DescribeAccountAssignmentCreationStatus"
+                - "sso:DescribeAccountAssignmentDeletionStatus"
                 - "sso:DescribePermissionSet"
                 - "sso:GetInlinePolicyForPermissionSet"
                 - "sso:ListPermissionSets"

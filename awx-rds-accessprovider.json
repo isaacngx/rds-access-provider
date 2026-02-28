@@ -16,11 +16,6 @@
             "pattern": "^[a-z0-9.]{1,32}$",
             "minLength": 1,
             "maxLength": 32
-        },
-        "PermissionSetArn": {
-            "type": "string",
-            "description": "The ARN of the permission set created for the database user.",
-            "pattern": "^arn:aws:sso:::permissionSet/ssoins-[a-z0-9]+/ps-[a-z0-9]+$"
         }
     },
     "required": [
@@ -35,7 +30,9 @@
                 "sso:CreatePermissionSet",
                 "identitystore:GetUserId",
                 "sso:CreateAccountAssignment",
-                "ssm:PutParameter"
+                "ssm:PutParameter",
+                "sso:DescribeAccountAssignmentCreationStatus",
+                "sso:DeletePermissionSet"
             ],
             "timeoutInMinutes": 5
         },
@@ -58,7 +55,8 @@
                 "ssm:GetParameter",
                 "sso:DeleteAccountAssignment",
                 "sso:DeletePermissionSet",
-                "ssm:DeleteParameter"
+                "ssm:DeleteParameter",
+                "sso:DescribeAccountAssignmentDeletionStatus"
             ],
             "timeoutInMinutes": 5
         }
