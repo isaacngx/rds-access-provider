@@ -41,7 +41,7 @@ class ResourceHandlerRequest(BaseResourceHandlerRequest):
 
 @dataclass
 class ResourceModel(BaseModel):
-    UserName: Optional[str]
+    Username: Optional[str]
     PermissionSetArn: Optional[str]
 
     @classmethod
@@ -54,7 +54,7 @@ class ResourceModel(BaseModel):
         dataclasses = {n: o for n, o in getmembers(sys.modules[__name__]) if isclass(o)}
         recast_object(cls, json_data, dataclasses)
         return cls(
-            UserName=json_data.get("UserName"),
+            Username=json_data.get("Username"),
             PermissionSetArn=json_data.get("PermissionSetArn"),
         )
 

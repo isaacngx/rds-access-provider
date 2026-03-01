@@ -2,32 +2,24 @@
     "typeName": "AWX::RDS::AccessProvider",
     "description": "This CloudFormation template creates an access provider for RDS databases. The access provider is implemented as an AWS SSO permission set that provides the necessary permissions for a database user to access RDS databases.",
     "createOnlyProperties": [
-        "/properties/UserName"
-    ],
-    "readOnlyProperties": [
-        "/properties/PermissionSetArn"
+        "/properties/Username"
     ],
     "primaryIdentifier": [
-        "/properties/PermissionSetArn"
+        "/properties/Username"
     ],
     "replacementStrategy": "delete_then_create",
     "additionalProperties": false,
     "properties": {
-        "UserName": {
+        "Username": {
             "type": "string",
             "description": "The name of the database user to which the access provider will provide access.",
-            "pattern": "^[a-z0-9.]{1,16}$",
+            "pattern": "^[a-z0-9.]{1,32}$",
             "minLength": 1,
-            "maxLength": 16
-        },
-        "PermissionSetArn": {
-            "type": "string",
-            "description": "The ARN of the permission set created for the database user.",
-            "pattern": "^arn:aws:sso:::permissionSet/ssoins-[a-z0-9]+/ps-[a-z0-9]+$"
+            "maxLength": 32
         }
     },
     "required": [
-        "UserName"
+        "Username"
     ],
     "handlers": {
         "create": {
@@ -35,7 +27,12 @@
                 "iam:CreatePolicy",
                 "iam:CreatePolicyVersion",
                 "sso:PutInlinePolicyToPermissionSet",
-                "sso:CreatePermissionSet"
+                "sso:CreatePermissionSet",
+                "identitystore:GetUserId",
+                "sso:CreateAccountAssignment",
+                "ssm:PutParameter",
+                "sso:DescribeAccountAssignmentCreationStatus",
+                "sso:DeletePermissionSet"
             ],
             "timeoutInMinutes": 5
         },
@@ -46,8 +43,7 @@
                 "iam:ListPolicyVersions",
                 "sso:GetInlinePolicyForPermissionSet",
                 "sso:DescribePermissionSet",
-                "sso:ListPermissionSets",
-                "sts:GetCallerIdentity"
+                "sso:ListPermissionSets"
             ],
             "timeoutInMinutes": 5
         },
@@ -56,8 +52,11 @@
                 "iam:DeletePolicy",
                 "iam:DeletePolicyVersion",
                 "sso:DeleteInlinePolicyFromPermissionSet",
+                "ssm:GetParameter",
+                "sso:DeleteAccountAssignment",
                 "sso:DeletePermissionSet",
-                "sts:GetCallerIdentity"
+                "ssm:DeleteParameter",
+                "sso:DescribeAccountAssignmentDeletionStatus"
             ],
             "timeoutInMinutes": 5
         }
