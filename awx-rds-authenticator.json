@@ -1,0 +1,107 @@
+{
+    "typeName": "AWX::RDS::Authenticator",
+    "description": "This CloudFormation template creates an access provider for RDS databases. The access provider is implemented as an AWS SSO permission set that provides the necessary permissions for a database user to access RDS databases.",
+    "createOnlyProperties": [
+        "/properties/Username",
+        "/properties/IamIdentityCenterId",
+        "/properties/Targets"
+    ],
+    "primaryIdentifier": [
+        "/properties/Username"
+    ],
+    "replacementStrategy": "delete_then_create",
+    "additionalProperties": false,
+    "properties": {
+        "Username": {
+            "type": "string",
+            "description": "The name of the database user to which the access provider will provide access.",
+            "pattern": "^[a-z0-9.]{1,32}$",
+            "minLength": 1,
+            "maxLength": 32
+        },
+        "IamIdentityCenterId": {
+            "type": "string",
+            "description": "The AWS IAM Identity Center instance ID (SSO instance ID).",
+            "pattern": "^ssoins-[a-z0-9]{16}$"
+        },
+        "Targets": {
+            "type": "array",
+            "description": "List of target RDS databases to grant access to.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "AccountId": {
+                        "type": "string",
+                        "description": "The AWS account ID where the RDS database is located.",
+                        "pattern": "^[0-9]{12}$"
+                    },
+                    "Region": {
+                        "type": "string",
+                        "description": "The AWS region where the RDS database is located."
+                    },
+                    "DbInstanceResourceId": {
+                        "type": "string",
+                        "description": "The RDS database instance resource ID.",
+                        "pattern": "^db-[A-Z0-9]{26}$"
+                    }
+                },
+                "required": [
+                    "AccountId",
+                    "Region"
+                ],
+                "additionalProperties": false
+            },
+            "minItems": 1
+        }
+    },
+    "required": [
+        "Username",
+        "IamIdentityCenterId",
+        "Targets"
+    ],
+    "handlers": {
+        "create": {
+            "permissions": [
+                "iam:CreatePolicy",
+                "iam:CreatePolicyVersion",
+                "identitystore:GetUserId",
+                "ssm:PutParameter",
+                "sso:CreateAccountAssignment",
+                "sso:PutInlinePolicyToPermissionSet",
+                "sso:CreatePermissionSet",
+                "sso:DescribeAccountAssignmentCreationStatus",
+                "sso:DeletePermissionSet",
+                "sso:DescribeInstance",
+                "iam:GetSAMLProvider",
+                "iam:PutRolePolicy",
+                "iam:CreateRole",
+                "iam:AttachRolePolicy"
+            ],
+            "timeoutInMinutes": 10
+        },
+        "read": {
+            "permissions": [
+                "iam:GetPolicy",
+                "iam:ListPolicies",
+                "iam:ListPolicyVersions",
+                "sso:GetInlinePolicyForPermissionSet",
+                "sso:DescribePermissionSet",
+                "sso:ListPermissionSets"
+            ],
+            "timeoutInMinutes": 5
+        },
+        "delete": {
+            "permissions": [
+                "iam:DeletePolicy",
+                "iam:DeletePolicyVersion",
+                "sso:DeleteInlinePolicyFromPermissionSet",
+                "ssm:GetParameter",
+                "sso:DeleteAccountAssignment",
+                "sso:DeletePermissionSet",
+                "ssm:DeleteParameter",
+                "sso:DescribeAccountAssignmentDeletionStatus"
+            ],
+            "timeoutInMinutes": 5
+        }
+    }
+}

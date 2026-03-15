@@ -42,7 +42,8 @@ class ResourceHandlerRequest(BaseResourceHandlerRequest):
 @dataclass
 class ResourceModel(BaseModel):
     Username: Optional[str]
-    PermissionSetArn: Optional[str]
+    IamIdentityCenterId: Optional[str]
+    Targets: Optional[Sequence["_Targets"]]
 
     @classmethod
     def _deserialize(
@@ -55,12 +56,37 @@ class ResourceModel(BaseModel):
         recast_object(cls, json_data, dataclasses)
         return cls(
             Username=json_data.get("Username"),
-            PermissionSetArn=json_data.get("PermissionSetArn"),
+            IamIdentityCenterId=json_data.get("IamIdentityCenterId"),
+            Targets=deserialize_list(json_data.get("Targets"), Targets),
         )
 
 
 # work around possible type aliasing issues when variable has same name as a model
 _ResourceModel = ResourceModel
+
+
+@dataclass
+class Targets(BaseModel):
+    AccountId: Optional[str]
+    Region: Optional[str]
+    DbInstanceResourceId: Optional[str]
+
+    @classmethod
+    def _deserialize(
+        cls: Type["_Targets"],
+        json_data: Optional[Mapping[str, Any]],
+    ) -> Optional["_Targets"]:
+        if not json_data:
+            return None
+        return cls(
+            AccountId=json_data.get("AccountId"),
+            Region=json_data.get("Region"),
+            DbInstanceResourceId=json_data.get("DbInstanceResourceId"),
+        )
+
+
+# work around possible type aliasing issues when variable has same name as a model
+_Targets = Targets
 
 
 @dataclass

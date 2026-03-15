@@ -21,7 +21,7 @@ Resources:
                   Ref: AWS::AccountId
               StringLike:
                 aws:SourceArn:
-                  Fn::Sub: arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:type/resource/AWX-RDS-AccessProvider/*
+                  Fn::Sub: arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:type/resource/AWX-RDS-Authenticator/*
       Path: "/"
       Policies:
         - PolicyName: ResourceTypePolicy
@@ -30,13 +30,17 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                - "iam:AttachRolePolicy"
                 - "iam:CreatePolicy"
                 - "iam:CreatePolicyVersion"
+                - "iam:CreateRole"
                 - "iam:DeletePolicy"
                 - "iam:DeletePolicyVersion"
                 - "iam:GetPolicy"
+                - "iam:GetSAMLProvider"
                 - "iam:ListPolicies"
                 - "iam:ListPolicyVersions"
+                - "iam:PutRolePolicy"
                 - "identitystore:GetUserId"
                 - "ssm:DeleteParameter"
                 - "ssm:GetParameter"
@@ -48,6 +52,7 @@ Resources:
                 - "sso:DeletePermissionSet"
                 - "sso:DescribeAccountAssignmentCreationStatus"
                 - "sso:DescribeAccountAssignmentDeletionStatus"
+                - "sso:DescribeInstance"
                 - "sso:DescribePermissionSet"
                 - "sso:GetInlinePolicyForPermissionSet"
                 - "sso:ListPermissionSets"
