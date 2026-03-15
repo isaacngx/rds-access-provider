@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: AWS SAM template for the AWX::RDS::AccessProvider resource type
+Description: AWS SAM template for the AWX::RDS::Authenticator resource type
 
 Globals:
   Function:
@@ -11,14 +11,14 @@ Resources:
   TypeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: awx_rds_accessprovider.handlers.resource
+      Handler: awx_rds_authenticator.handlers.resource
       Runtime: python3.10
       CodeUri: build/
 
   TestEntrypoint:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: awx_rds_accessprovider.handlers.test_entrypoint
+      Handler: awx_rds_authenticator.handlers.test_entrypoint
       Runtime: python3.10
       CodeUri: build/
 

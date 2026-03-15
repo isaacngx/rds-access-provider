@@ -1,10 +1,10 @@
 {
     "artifact_type": "RESOURCE",
-    "typeName": "AWX::RDS::AccessProvider",
+    "typeName": "AWX::RDS::Authenticator",
     "language": "python310",
     "runtime": "python3.10",
-    "entrypoint": "awx_rds_accessprovider.handlers.resource",
-    "testEntrypoint": "awx_rds_accessprovider.handlers.test_entrypoint",
+    "entrypoint": "awx_rds_authenticator.handlers.resource",
+    "testEntrypoint": "awx_rds_authenticator.handlers.test_entrypoint",
     "settings": {
         "version": false,
         "subparser_name": null,
